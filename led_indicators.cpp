@@ -12,6 +12,8 @@ LEDIndicators::LEDIndicators() {
   breathingDirection = true;
   pingPongPos = 0;
   pingPongDirection = true;
+  manualMoving = false;
+  manualDirection = true;
 }
 
 LEDIndicators::~LEDIndicators() {
@@ -99,10 +101,38 @@ void LEDIndicators::updatePingPongAnimation() {
   }
 }
 
+void LEDIndicators::setManualMovement(bool moving, bool directionRight) {
+  manualMoving = moving;
+  manualDirection = directionRight;
+  
+  // Reset animation when movement changes
+  if (moving) {
+    animationStep = 0;
+    if (directionRight) {
+      pingPongPos = 0;  // Start from left for right movement
+    } else {
+      pingPongPos = NUM_LEDS - 1;  // Start from right for left movement
+    }
+  } else {
+    // Reset breathing animation when stopping
+    breathingDirection = true;
+    animationStep = 30;  // Start at minimum brightness
+  }
+}
+
 void LEDIndicators::updateManualAnimation() {
-  if (isTimeForUpdate(BREATHING_INTERVAL)) {
-    breathingEffect(COLOR_PURPLE);
-    lastUpdate = millis();
+  if (manualMoving) {
+    // Show directional movement animation
+    if (isTimeForUpdate(MANUAL_MOVE_INTERVAL)) {
+      manualDirectionEffect(COLOR_PURPLE);
+      lastUpdate = millis();
+    }
+  } else {
+    // Show breathing animation when stopped
+    if (isTimeForUpdate(BREATHING_INTERVAL)) {
+      breathingEffect(COLOR_PURPLE);
+      lastUpdate = millis();
+    }
   }
 }
 
@@ -161,6 +191,45 @@ void LEDIndicators::pingPongEffect(uint32_t color) {
     leds[pingPongPos - 1] = uint32ToCRGB(dimColor(color, 100));
   } else if (!pingPongDirection && pingPongPos < NUM_LEDS - 1) {
     leds[pingPongPos + 1] = uint32ToCRGB(dimColor(color, 100));
+  }
+  
+  FastLED.show();
+}
+
+void LEDIndicators::manualDirectionEffect(uint32_t color) {
+  // Clear all LEDs first
+  clearAll();
+  
+  if (manualDirection) {
+    // Moving right/towards B - sweep from left to right
+    animationStep++;
+    if (animationStep >= NUM_LEDS * 3) {
+      animationStep = 0;  // Reset animation cycle
+    }
+    
+    // Create a moving sweep effect
+    int activePos = (animationStep / 3) % NUM_LEDS;
+    for (int i = 0; i <= activePos; i++) {
+      uint8_t brightness = 255 - (activePos - i) * 60;  // Trailing fade effect
+      if (brightness > 50) {  // Keep minimum visibility
+        leds[i] = uint32ToCRGB(dimColor(color, brightness));
+      }
+    }
+  } else {
+    // Moving left/towards A - sweep from right to left
+    animationStep++;
+    if (animationStep >= NUM_LEDS * 3) {
+      animationStep = 0;  // Reset animation cycle
+    }
+    
+    // Create a moving sweep effect from right
+    int activePos = NUM_LEDS - 1 - ((animationStep / 3) % NUM_LEDS);
+    for (int i = NUM_LEDS - 1; i >= activePos; i--) {
+      uint8_t brightness = 255 - (i - activePos) * 60;  // Trailing fade effect
+      if (brightness > 50) {  // Keep minimum visibility
+        leds[i] = uint32ToCRGB(dimColor(color, brightness));
+      }
+    }
   }
   
   FastLED.show();

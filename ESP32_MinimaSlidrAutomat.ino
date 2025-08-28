@@ -434,6 +434,7 @@ void checkButtonPresses() {
     // No need to stop here - let manual move function handle the transition
     stateMachine.transitionTo(STATE_MANUAL_MOVE_TO_A);
     leds.setState(LED_MANUAL);    // Use purple LED pattern for manual moves
+    leds.setManualMovement(true, false);  // Moving towards A (left)
   }
   
   // Check Move to B button  
@@ -442,6 +443,7 @@ void checkButtonPresses() {
     // No need to stop here - let manual move function handle the transition
     stateMachine.transitionTo(STATE_MANUAL_MOVE_TO_B);
     leds.setState(LED_MANUAL);    // Use purple LED pattern for manual moves
+    leds.setManualMovement(true, true);   // Moving towards B (right)
   }
   
   // Check Return to Ping-pong button (only when in manual wait states)
@@ -467,6 +469,7 @@ void executeManualMoveToA() {
   if (distance < POSITION_TOLERANCE_MM) {
     Serial.println("Reached Home A safe position");
     hasSetTarget = false;  // Reset for next move
+    leds.setManualMovement(false);  // Stop movement, switch to breathing
     stateMachine.transitionTo(STATE_MANUAL_WAIT_A);
     return;
   }
@@ -491,6 +494,7 @@ void executeManualMoveToB() {
   if (distance < POSITION_TOLERANCE_MM) {
     Serial.println("Reached Home B safe position");
     hasSetTarget = false;  // Reset for next move
+    leds.setManualMovement(false);  // Stop movement, switch to breathing
     stateMachine.transitionTo(STATE_MANUAL_WAIT_B);
     return;
   }
@@ -521,6 +525,7 @@ void executeManualWaitA() {
   if (buttons.isButtonBPressed()) {
     Serial.println("Manual control: Moving to Home B safe position");
     hasReportedHolding = false;  // Reset flag for movement
+    leds.setManualMovement(true, true);   // Moving towards B (right)
     stateMachine.transitionTo(STATE_MANUAL_MOVE_TO_B);
   }
 }
@@ -541,6 +546,7 @@ void executeManualWaitB() {
   if (buttons.isButtonAPressed()) {
     Serial.println("Manual control: Moving to Home A safe position");
     hasReportedHolding = false;  // Reset flag for movement
+    leds.setManualMovement(true, false);  // Moving towards A (left)
     stateMachine.transitionTo(STATE_MANUAL_MOVE_TO_A);
   }
 }
