@@ -38,48 +38,173 @@ MinimaSlidrAutomat is designed for simplicity and self-calibration. Upon power-u
 
 ## Hardware Requirements
 
-### Components
-- ESP32 development board
-- TMC2208 stepper motor driver (basic step/dir mode)
-- NEMA17 stepper motor
-- **2x Hall effect sensors** (A3144, OH3144 or similar - active low)
-- WS2812B LED strip (5 LEDs)
-- **3x Push buttons** (for manual control)
-- Camera slider rail system (any length)
-- 12V power supply
+### Electronic Components
+- **ESP32 development board** (DevKit V1 or similar)
+- **TMC2208 stepper motor driver** (basic step/dir mode)
+- **NEMA 17 stepper motor** (1.8° step angle recommended)
+- **2x UGN3503UA Hall effect sensors** (or equivalent: A3144, OH3144)
+- **WS2812B LED strip** (5 LEDs)
+- **3x Push buttons** (momentary, normally open)
+- **USB-C PD breakout board** (configurable to 12V output)
+- **LM2596 buck converter module** (12V to 5V, 3A capacity)
+- **2x 10kΩ resistors** (pull-up resistors for hall sensors)
 - **2x Neodymium magnets** (for sensor triggering)
 
-### Connections
+### Mechanical Components
+- **Camera slider rail system** (any length, typically 60-100cm)
+- **Slider carriage/belt system**
+- **Mounting brackets** for motor and electronics
+- **Enclosure** (optional but recommended)
+
+## Power System Architecture
+
+### Power Distribution
+```
+USB-C PD (12V) ──┬── TMC2208 VM (Motor Power)
+                 │
+                 └── LM2596 Buck Module (5V/3A)
+                     │
+                     ├── ESP32 VIN (→ Internal 3.3V regulator)
+                     ├── WS2812B LED Strip (5V)
+                     ├── TMC2208 VDD (Logic Power)
+                     └── UGN3503UA Sensors (5V)
+```
+
+### Power Budget
+| Component | Current Draw | Supply Rail | Power |
+|-----------|--------------|-------------|--------|
+| ESP32 (active) | ~250mA | 5V→3.3V | 1.25W |
+| WS2812B LEDs (5x) | ~300mA | 5V | 1.5W |
+| UGN3503UA Sensors (2x) | ~20mA | 5V | 0.1W |
+| TMC2208 Logic | ~100mA | 5V | 0.5W |
+| TMC2208 + NEMA17 | ~1.5A | 12V | 18W |
+| **Total System** | **~2.17A** | **Mixed** | **21.35W** |
+
+**5V Rail Load:** 670mA (well within LM2596 3A capacity)  
+**12V Rail Load:** 1.5A (motor operation)
+
+## Detailed Wiring Diagram
+
+### Power Connections
+```
+USB-C PD BREAKOUT:
+12V+ ──┬── TMC2208 VM
+       └── LM2596 VIN
+
+GND ───┴── Common Ground Bus (all components)
+
+LM2596 5V OUT ──┬── ESP32 VIN
+                ├── WS2812B 5V
+                ├── TMC2208 VDD  
+                └── UGN3503UA VCC (both sensors)
+```
+
+### Signal Connections
 ```
 ESP32 Pin -> Component
 Pin 2     -> TMC2208 STEP
 Pin 4     -> TMC2208 DIR  
 Pin 5     -> TMC2208 EN (Enable)
-Pin 21    -> Home A Hall Sensor Signal (with pullup) - LEFT END
-Pin 22    -> Home B Hall Sensor Signal (with pullup) - RIGHT END
+Pin 21    -> UGN3503UA #1 OUT (Home A - LEFT END)
+Pin 22    -> UGN3503UA #2 OUT (Home B - RIGHT END)
 Pin 23    -> WS2812B LED Data In
-Pin 25    -> Move to A Button (with internal pullup)
-Pin 26    -> Move to B Button (with internal pullup)
-Pin 27    -> Return to Ping-pong Button (with internal pullup)
-GND       -> Both Hall Sensors GND
-3.3V      -> Both Hall Sensors VCC
-5V        -> WS2812B Power (VDD)
-GND       -> WS2812B Ground
+Pin 25    -> Move to A Button (with internal pullup to 3.3V)
+Pin 26    -> Move to B Button (with internal pullup to 3.3V)
+Pin 27    -> Return to Ping-pong Button (with internal pullup to 3.3V)
+3.3V      -> 10kΩ Pull-up Resistors -> UGN3503UA OUT pins
+GND       -> All component ground connections
 ```
+
+### Hall Sensor Wiring Detail
+```
+UGN3503UA #1 (Home A):          UGN3503UA #2 (Home B):
+Pin 1 (VCC) -> 5V               Pin 1 (VCC) -> 5V
+Pin 2 (GND) -> GND              Pin 2 (GND) -> GND  
+Pin 3 (OUT) -> 10kΩ -> 3.3V     Pin 3 (OUT) -> 10kΩ -> 3.3V
+             -> ESP32 GPIO21                  -> ESP32 GPIO22
+```
+
+### Button Wiring
+```
+All buttons: One side to ESP32 GPIO, other side to GND
+ESP32 internal pull-ups enabled in software (INPUT_PULLUP)
+```
+
+## Complete Bill of Materials (BOM)
+
+### Electronic Components - Core System
+| Component | Quantity | Specification | Est. Price | Purpose |
+|-----------|----------|--------------|------------|---------|
+| ESP32 DevKit V1 | 1 | 30-pin development board | $8-12 | Main controller |
+| TMC2208 Stepper Driver | 1 | V3.0 with heatsink | $8-15 | Motor driver |
+| NEMA 17 Stepper Motor | 1 | 1.8°, 1.5A, 4-wire | $15-25 | Motion control |
+| UGN3503UA Hall Sensors | 2 | TO-92 package | $2-4 each | Position sensing |
+| WS2812B LED Strip | 1 | 5 LEDs, 5V addressable | $5-8 | Status indication |
+| Push Buttons | 3 | 6mm tactile, momentary NO | $1-2 each | Manual control |
+
+### Power System
+| Component | Quantity | Specification | Est. Price | Purpose |
+|-----------|----------|--------------|------------|---------|
+| USB-C PD Breakout | 1 | 12V configurable output | $10-20 | Primary power |
+| LM2596 Buck Module | 1 | 12V→5V, 3A adjustable | $3-8 | 5V regulation |
+| 10kΩ Resistors | 2 | 1/4W, through-hole | $0.10 each | Hall sensor pull-ups |
+| Neodymium Magnets | 2 | N35, 10-15mm diameter | $2-5 each | Sensor triggering |
+
+### Connection Hardware
+| Component | Quantity | Specification | Est. Price | Purpose |
+|-----------|----------|--------------|------------|---------|
+| Breadboard/Perfboard | 1 | Half-size or larger | $3-8 | Prototyping |
+| Jumper Wires | 1 set | Male-male, various lengths | $5-10 | Connections |
+| Header Pins | As needed | 2.54mm pitch | $2-5 | Board connections |
+| Terminal Blocks | 2-3 | Screw terminals | $3-8 | Power connections |
+
+### Mechanical Hardware (Project Specific)
+| Component | Quantity | Specification | Est. Price | Purpose |
+|-----------|----------|--------------|------------|---------|
+| Camera Slider Rail | 1 | 60-100cm length | $50-200 | Motion platform |
+| Timing Belt | 1 | GT2, length as needed | $10-20 | Motion transmission |
+| Belt Pulleys | 2 | GT2, 20-tooth | $8-15 each | Belt drive |
+| Linear Bearings | 2-4 | Match rail system | $10-25 each | Smooth motion |
+| Motor Mount Bracket | 1 | Custom or universal | $10-30 | Motor attachment |
+| Enclosure | 1 | IP54+ rated recommended | $15-40 | Electronics protection |
+
+### Tools Required
+| Item | Purpose |
+|------|---------|
+| Soldering iron & solder | Component assembly |
+| Wire strippers | Cable preparation |
+| Small screwdriver set | Mechanical assembly |
+| Multimeter | Testing & debugging |
+| Heat shrink tubing | Connection protection |
+
+### **Estimated Total Cost: $200-450 USD**
+*Range depends on slider rail system quality and sourcing choices*
+
+### Sourcing Recommendations
+- **Electronics**: AliExpress, Amazon, DigiKey, Mouser
+- **Mechanical**: OpenBuilds, RobotShop, local machine shops
+- **3D Printed Parts**: Custom brackets and mounts as needed
 
 ### TMC2208 Wiring (Basic Mode)
 ```
 TMC2208 -> Connection
-VDD     -> 3.3V
-GND     -> GND
-VM      -> 12V Motor Supply
-GND     -> Motor Supply GND
-1A, 1B  -> Motor Coil 1
-2A, 2B  -> Motor Coil 2
-STEP    -> ESP32 Pin 2
-DIR     -> ESP32 Pin 4
-EN      -> ESP32 Pin 5
+VDD     -> 5V (from LM2596)    // Logic power
+GND     -> Common ground       // Logic ground
+VM      -> 12V (from USB-C PD) // Motor power supply
+GND     -> Common ground       // Motor power ground
+1A, 1B  -> NEMA 17 Coil A     // Motor winding 1
+2A, 2B  -> NEMA 17 Coil B     // Motor winding 2
+STEP    -> ESP32 Pin 2         // Step pulse signal
+DIR     -> ESP32 Pin 4         // Direction control
+EN      -> ESP32 Pin 5         // Enable (active low)
 ```
+
+### Power Supply Requirements Summary
+- **USB-C PD**: 12V, minimum 2A capacity (24W minimum)
+- **LM2596 Module**: Pre-configured for 5V output, 3A capacity  
+- **Efficiency**: ~92% power conversion efficiency
+- **Heat Generation**: Minimal (both supplies run cool)
+- **Safety**: Fused input recommended (3A fast-blow fuse)
 
 ## Software Configuration
 
