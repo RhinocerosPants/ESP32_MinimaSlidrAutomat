@@ -44,6 +44,7 @@ MinimaSlidrAutomat is designed for simplicity and self-calibration. Upon power-u
 - NEMA17 stepper motor
 - **2x Hall effect sensors** (A3144, OH3144 or similar - active low)
 - WS2812B LED strip (5 LEDs)
+- **3x Push buttons** (for manual control)
 - Camera slider rail system (any length)
 - 12V power supply
 - **2x Neodymium magnets** (for sensor triggering)
@@ -85,9 +86,10 @@ EN      -> ESP32 Pin 5
 ### Key Parameters (Calibrated Values)
 ```cpp
 #define STEPS_PER_MM      46.24f    // Precisely calibrated for accurate positioning
-#define MAX_SPEED         800       // Steps/sec (17.3mm/s actual speed)
+#define MAX_SPEED         400       // Steps/sec (8.7mm/s smooth filming ping-pong)
+#define MANUAL_SPEED      1600      // Steps/sec (34.6mm/s - 4x faster than ping-pong)
 #define ACCELERATION      200       // Steps/sec² (smooth 4-second accel/decel)
-#define HOMING_SPEED      4624      // Steps/sec (100mm/s for all pre-ping-pong movements)
+#define HOMING_SPEED      2400      // Steps/sec (51.9mm/s for all pre-ping-pong movements)
 #define SENSOR_CLEARANCE_MM  20.0f  // Clearance from sensors for ping-pong range
 // Travel distance and ping-pong range measured automatically during dual sensor homing
 float measuredTravelMM;             // Actual distance between sensors
@@ -97,7 +99,7 @@ float pingPongEndMM;                // Calculated end position
 
 ### Timing Settings
 ```cpp
-#define HOMING_SPEED      4624      // All pre-ping-pong movements (100mm/s)
+#define HOMING_SPEED      2400      // All pre-ping-pong movements (51.9mm/s)
 #define HOMING_TIMEOUT_MS 40000     // 40-second timeout per sensor (1000mm travel limit)
 #define START_PAUSE_MS    3000      // 3-second pause before ping-pong
 ```
@@ -110,7 +112,7 @@ float pingPongEndMM;                // Calculated end position
 - Begins automatic dual sensor homing sequence
 
 ### 2. Home A Homing Phase
-- **Speed**: 100mm/s (constant speed, no acceleration) 
+- **Speed**: 51.9mm/s (constant speed, no acceleration) 
 - **Direction**: Moves left (negative) to find Home A sensor
 - **Detection**: Stops immediately when Home A sensor activates
 - **Timeout**: 40 seconds maximum (1000mm safe travel limit)
@@ -118,7 +120,7 @@ float pingPongEndMM;                // Calculated end position
 - **LED Status**: Breathing amber animation during homing
 
 ### 3. Home B Homing Phase  
-- **Speed**: 100mm/s (constant speed, no acceleration)
+- **Speed**: 51.9mm/s (constant speed, no acceleration)
 - **Direction**: Moves right (positive) to find Home B sensor
 - **Detection**: Stops immediately when Home B sensor activates
 - **Timeout**: 40 seconds maximum (1000mm safe travel limit)
@@ -140,11 +142,41 @@ float pingPongEndMM;                // Calculated end position
 ### 6. Ping-Pong Motion
 - **Range**: Calculated automatically based on measured travel distance
 - **Example**: If 500mm travel measured, ping-pong from 20mm to 445mm (425mm range)
-- **Speed**: 17.3mm/s maximum speed
+- **Speed**: 8.7mm/s maximum speed (smooth cinematic motion)
 - **Acceleration**: 4-second smooth acceleration/deceleration
 - **Pattern**: Continuous back-and-forth motion within calculated safe limits
-- **Duration**: Infinite (until power removed)
+- **Duration**: Infinite (until manual control or power removed)
 - **LED Status**: Green ping-pong animation following motion direction
+
+## Manual Control Operation
+
+The system includes three manual control buttons that can interrupt ping-pong mode for precise positioning:
+
+### Button Functions
+- **Move to A Button (GPIO 25)**: Move to Home A position + clearance (20mm from sensor)
+- **Move to B Button (GPIO 26)**: Move to Home B position - clearance (20mm from sensor)  
+- **Return to Ping-pong (GPIO 27)**: Return to automatic ping-pong mode from manual mode
+
+### Manual Operation Sequence
+
+#### From Ping-pong Mode:
+1. **Button Press**: Press Move to A or Move to B button during ping-pong operation
+2. **Transition**: System stops ping-pong and switches to manual mode
+3. **Movement**: Accelerated motion to target position at 34.6mm/s (4x faster than ping-pong)
+4. **Arrival**: System holds position and waits for next button press
+5. **LED Status**: Switches to breathing purple animation
+
+#### In Manual Mode:
+- **A ↔ B Switching**: Press opposite button to move between A and B positions
+- **Return to Ping-pong**: Press Return button to restart full homing sequence
+- **LED Status**: Purple breathing indicates manual mode active
+- **Speed**: 4x faster than ping-pong for quick repositioning
+
+#### Manual Mode Characteristics:
+- **Speed**: 1600 steps/sec (34.6mm/s) - optimized for quick positioning
+- **Motion Type**: Accelerated movement with 2x acceleration for responsive feel
+- **Target Positions**: Safe clearance positions (not actual sensor locations)
+- **Recovery**: Power cycle or Return button restarts full automatic sequence
 
 ## State Machine
 
@@ -157,13 +189,28 @@ STATE_HOMING_B → (find Home B sensor - right end, wait for motor stop)
     ↓
 STATE_MEASURING_TRAVEL → (calculate ping-pong range from measured travel)
     ↓
-STATE_PAUSING_AT_START → (3-second pause at Home B end)
+STATE_MOVING_TO_START → (move to calculated start position)
     ↓
-STATE_PING_PONG → (continuous motion from Home B to Home A and back)
-    ↑_____________↓
-    
+STATE_PAUSING_AT_START → (3-second pause before ping-pong)
+    ↓
+STATE_PING_PONG ←→ (continuous motion between calculated endpoints)
+    ↓         ↑
+    ↓ (button press)
+    ↓         ↑ (Return button)
+    ↓         ↑
+STATE_MANUAL_MOVE_TO_A → STATE_MANUAL_WAIT_A ←→ STATE_MANUAL_MOVE_TO_B → STATE_MANUAL_WAIT_B
+                                ↑                                              ↓
+                                ↑______________________________________________|
+                                                (A/B switching)
+
 STATE_ERROR → (permanent error, motor holds position, power cycle required)
 ```
+
+### State Descriptions
+- **Automatic States**: BOOT → HOMING_A → HOMING_B → MEASURING → MOVING → PAUSING → PING_PONG
+- **Manual States**: MANUAL_MOVE_TO_A/B (moving), MANUAL_WAIT_A/B (positioned and waiting)
+- **Transitions**: Button presses interrupt ping-pong; Return button restarts homing sequence
+- **Error State**: Accessible from any state, requires power cycle to recover
 
 ## Safety Features
 
@@ -206,7 +253,8 @@ MinimaSlidrAutomat features a 5-LED WS2812B strip providing visual status indica
 
 ### LED States
 - **🟠 Breathing Amber**: Homing phase - searching for hall sensor
-- **🟢 Green Ping-Pong**: Normal operation - LED moves back and forth following slider motion  
+- **🟢 Green Ping-Pong**: Normal operation - LED moves back and forth following slider motion
+- **🟣 Breathing Purple**: Manual control mode - manual positioning active  
 - **🔴 Breathing Red**: Error state - crash detected, timeout, or bounds exceeded
 
 ### LED Behaviors
@@ -313,8 +361,10 @@ Most errors require **power cycle** to reset:
 
 **Speed Changes:**
 ```cpp
-#define MAX_SPEED 600    // Slower: 13mm/s instead of 17.3mm/s  
-#define MAX_SPEED 1000   // Faster: 21.6mm/s instead of 17.3mm/s
+#define MAX_SPEED 200    // Slower: 4.3mm/s instead of 8.7mm/s  
+#define MAX_SPEED 800    // Faster: 17.3mm/s instead of 8.7mm/s
+#define MANUAL_SPEED 800 // Slower manual: 17.3mm/s instead of 34.6mm/s
+#define MANUAL_SPEED 3200 // Faster manual: 69.2mm/s instead of 34.6mm/s
 ```
 
 **Acceleration Changes:**
