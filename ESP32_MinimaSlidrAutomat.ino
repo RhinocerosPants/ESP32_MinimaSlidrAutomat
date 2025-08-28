@@ -447,10 +447,10 @@ void checkButtonPresses() {
   // Check Return to Ping-pong button (only when in manual wait states)
   if (buttons.isButtonPingPongPressed()) {
     if (currentState == STATE_MANUAL_WAIT_A || currentState == STATE_MANUAL_WAIT_B) {
-      Serial.println("Return to ping-pong button pressed - restarting homing sequence");
-      stepper.stopAndHold();      // Stop current movement
-      leds.setState(LED_HOMING);  // Switch to homing LEDs
-      stateMachine.transitionTo(STATE_HOMING_A);  // Restart full homing sequence
+      Serial.println("Return to ping-pong button pressed - resuming ping-pong motion");
+      stepper.configureForPingPong();  // Configure for ping-pong speeds
+      leds.setState(LED_PING_PONG);    // Switch to ping-pong LEDs
+      stateMachine.transitionTo(STATE_PING_PONG);  // Go directly to ping-pong mode
     }
   }
 }

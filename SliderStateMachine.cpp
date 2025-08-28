@@ -141,10 +141,10 @@ bool SliderStateMachine::canTransitionTo(SliderState newState) const {
       return newState == STATE_MANUAL_WAIT_B;
       
     case STATE_MANUAL_WAIT_A:
-      return newState == STATE_MANUAL_MOVE_TO_B || newState == STATE_HOMING_A;
+      return newState == STATE_MANUAL_MOVE_TO_B || newState == STATE_PING_PONG;
       
     case STATE_MANUAL_WAIT_B:
-      return newState == STATE_MANUAL_MOVE_TO_A || newState == STATE_HOMING_A;
+      return newState == STATE_MANUAL_MOVE_TO_A || newState == STATE_PING_PONG;
       
     default:
       return false;
