@@ -2,7 +2,7 @@
  * ESP32 MinimaSlidrAutomat - Self-Calibrating Camera Slider
  * v2.0 - Production Release
  * 
- * Project by RhinocerosPants Team - Aaron Young
+ * Project by Aaron Young
  * Developed with assistance from Anthropic's Claude Code
  * Repository: https://github.com/RhinocerosPants/ESP32_MinimaSlidrAutomat
  * 
@@ -58,7 +58,7 @@ ButtonManager buttons;
 void setup() {
   Serial.begin(115200);
   Serial.println("=== ESP32 MinimaSlidrAutomat v2.0 - Production Release ===");
-  Serial.println("By RhinocerosPants Team - Aaron Young");
+  Serial.println("By Aaron Young");
   Serial.println("Self-calibrating dual sensor camera slider");
   Serial.printf("Homing Speed: %d steps/sec (%.1fmm/s)\n", HOMING_SPEED, HOMING_SPEED / STEPS_PER_MM);
   Serial.println("Starting initialization...");

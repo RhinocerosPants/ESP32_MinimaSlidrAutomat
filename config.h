@@ -2,7 +2,7 @@
  * ESP32 MinimaSlidrAutomat - Configuration Header
  * v2.0 - Production Release
  * 
- * Project by RhinocerosPants Team - Aaron Young
+ * Project by Aaron Young
  * Developed with assistance from Anthropic's Claude Code
  * Repository: https://github.com/RhinocerosPants/ESP32_MinimaSlidrAutomat
  * 
@@ -104,4 +104,4 @@ extern float pingPongEndMM;                 // Calculated end position (measured
 
 // ========== VERSION INFORMATION ==========
 #define FIRMWARE_VERSION "v2.0"
-#define FIRMWARE_DESCRIPTION "Production Release - RhinocerosPants Team"
+#define FIRMWARE_DESCRIPTION "Production Release"

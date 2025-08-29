@@ -3,7 +3,7 @@
  * @brief Stepper Motor Controller for ESP32 MinimaSlidrAutomat
  * @version 2.0
  * @date 2024
- * @author RhinocerosPants Team - Aaron Young
+ * @author Aaron Young
  * @note Developed with assistance from Anthropic's Claude Code
  * @repository https://github.com/RhinocerosPants/ESP32_MinimaSlidrAutomat
  * 

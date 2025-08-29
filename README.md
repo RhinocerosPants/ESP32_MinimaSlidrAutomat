@@ -1,15 +1,26 @@
 # ESP32 MinimaSlidrAutomat
 
-A self-calibrating ESP32-based camera slider with automatic ping-pong motion and manual control capabilities.
+**Smart Automation Retrofit for Existing Camera Sliders**
+
+Transform your manual camera slider into a self-calibrating, intelligent motion control system with automatic ping-pong motion and manual positioning capabilities.
 
 ## Project Credits
 
-**Project by:** RhinocerosPants Team - Aaron Young  
+**Project by:** Aaron Young  
 **Development:** With assistance from Anthropic's Claude Code  
 **Repository:** https://github.com/RhinocerosPants/ESP32_MinimaSlidrAutomat  
 **Version:** 2.0 - Production Release
 
-A fully autonomous ESP32 camera slider with dual hall effect sensors that automatically measures travel distance and runs continuous ping-pong motion without any user configuration.
+## Project Overview
+
+This project is designed for **creative tinkerers and budget-conscious creators** who want to add intelligent automation to their existing camera slider systems. It combines:
+
+- **Electronics**: ESP32 microcontroller, stepper motor control, sensor integration
+- **Programming**: Arduino C++ firmware with sophisticated state machine architecture  
+- **3D Design & Printing**: Custom mounting brackets and sensor housings
+- **Mechanical Integration**: Retrofit installation onto existing slider hardware
+
+The system uses dual hall effect sensors to automatically measure your slider's travel distance and creates a self-calibrating ping-pong motion system with no manual configuration required.
 
 ## Overview
 
@@ -50,11 +61,12 @@ MinimaSlidrAutomat is designed for simplicity and self-calibration. Upon power-u
 - **2x 10kΩ resistors** (pull-up resistors for hall sensors)
 - **2x Neodymium magnets** (for sensor triggering)
 
-### Mechanical Components
-- **Camera slider rail system** (any length, typically 60-100cm)
-- **Slider carriage/belt system**
-- **Mounting brackets** for motor and electronics
-- **Enclosure** (optional but recommended)
+### Mechanical Components (Retrofit Requirements)
+- **Existing camera slider** (this project retrofits your current slider)
+- **Motor mounting bracket** (3D printed or custom fabricated)
+- **Sensor mounting brackets** (3D printed housings for hall sensors)
+- **Belt/pulley system** (if not already present on your slider)
+- **Electronics enclosure** (3D printed or purchased, weather protection recommended)
 
 ## Power System Architecture
 
@@ -158,15 +170,14 @@ ESP32 internal pull-ups enabled in software (INPUT_PULLUP)
 | Header Pins | As needed | 2.54mm pitch | $2-5 | Board connections |
 | Terminal Blocks | 2-3 | Screw terminals | $3-8 | Power connections |
 
-### Mechanical Hardware (Project Specific)
+### Retrofit Hardware (As Needed)
 | Component | Quantity | Specification | Est. Price | Purpose |
 |-----------|----------|--------------|------------|---------|
-| Camera Slider Rail | 1 | 60-100cm length | $50-200 | Motion platform |
-| Timing Belt | 1 | GT2, length as needed | $10-20 | Motion transmission |
-| Belt Pulleys | 2 | GT2, 20-tooth | $8-15 each | Belt drive |
-| Linear Bearings | 2-4 | Match rail system | $10-25 each | Smooth motion |
-| Motor Mount Bracket | 1 | Custom or universal | $10-30 | Motor attachment |
-| Enclosure | 1 | IP54+ rated recommended | $15-40 | Electronics protection |
+| Timing Belt | 1 | GT2, length to match slider | $5-15 | Motion transmission (if needed) |
+| Belt Pulleys | 2 | GT2, 20-tooth | $3-8 each | Belt drive (if needed) |
+| 3D Printing Filament | ~200g | PLA or PETG | $5-10 | Custom brackets and housings |
+| M3/M4 Bolts & Nuts | Assorted | Stainless steel | $5-15 | Mounting hardware |
+| Aluminum Extrusion | As needed | 20x20 or 30x30mm | Variable | Custom brackets (alternative to 3D printing) |
 
 ### Tools Required
 | Item | Purpose |
@@ -176,9 +187,9 @@ ESP32 internal pull-ups enabled in software (INPUT_PULLUP)
 | Small screwdriver set | Mechanical assembly |
 | Multimeter | Testing & debugging |
 | Heat shrink tubing | Connection protection |
-
-### **Estimated Total Cost: $200-450 USD**
-*Range depends on slider rail system quality and sourcing choices*
+| 3D Printer | Custom brackets and sensor housings |
+| CAD Software | Designing custom mounting solutions |
+| Drill & bits | Mounting holes in existing slider |
 
 ### Sourcing Recommendations
 - **Electronics**: AliExpress, Amazon, DigiKey, Mouser
@@ -289,12 +300,12 @@ The system includes three manual control buttons that can interrupt ping-pong mo
 2. **Transition**: System stops ping-pong and switches to manual mode
 3. **Movement**: Accelerated motion to target position at 34.6mm/s (4x faster than ping-pong)
 4. **Arrival**: System holds position and waits for next button press
-5. **LED Status**: Switches to breathing purple animation
+5. **LED Status**: Purple sweep animation during movement, purple breathing when stopped
 
 #### In Manual Mode:
 - **A ↔ B Switching**: Press opposite button to move between A and B positions
 - **Return to Ping-pong**: Press Return button to restart full homing sequence
-- **LED Status**: Purple breathing indicates manual mode active
+- **LED Status**: Purple sweep animation shows direction during movement, purple breathing when stopped
 - **Speed**: 4x faster than ping-pong for quick repositioning
 
 #### Manual Mode Characteristics:
@@ -379,12 +390,14 @@ MinimaSlidrAutomat features a 5-LED WS2812B strip providing visual status indica
 ### LED States
 - **🟠 Breathing Amber**: Homing phase - searching for hall sensor
 - **🟢 Green Ping-Pong**: Normal operation - LED moves back and forth following slider motion
-- **🟣 Breathing Purple**: Manual control mode - manual positioning active  
+- **🟣 Purple Manual Mode**: Manual control mode with directional animations
 - **🔴 Breathing Red**: Error state - crash detected, timeout, or bounds exceeded
 
 ### LED Behaviors
 - **Breathing Effect**: Smooth fade in/out animation (30ms updates)
-- **Ping-Pong Effect**: Single LED moves left-right with trailing dim LED (150ms updates)
+- **Ping-Pong Effect**: Single LED moves left-right with trailing dim LED (225ms updates - 50% slower than previous versions)
+- **Manual Movement**: Purple sweep animation showing direction of travel during movement
+- **Manual Stopped**: Purple breathing animation when stopped in manual mode
 - **Test Pattern**: Blue sequence flash on startup to verify LEDs working
 
 ### Hardware
