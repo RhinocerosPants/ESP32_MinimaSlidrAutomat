@@ -55,7 +55,7 @@ MinimaSlidrAutomat is designed for simplicity and self-calibration. Upon power-u
 - **NEMA 17 stepper motor** (1.8° step angle recommended)
 - **2x UGN3503UA Hall effect sensors** (or equivalent: A3144, OH3144)
 - **WS2812B LED strip** (5 LEDs)
-- **3x Push buttons** (momentary, normally open)
+- **4x Push buttons** (momentary, normally open - 3 for manual control, 1 for reset)
 - **USB-C PD breakout board** (configurable to 12V output)
 - **LM2596 buck converter module** (12V to 5V, 3A capacity)
 - **2x 10kΩ resistors** (pull-up resistors for hall sensors)
@@ -123,6 +123,7 @@ Pin 23    -> WS2812B LED Data In
 Pin 25    -> Move to A Button (with internal pullup to 3.3V)
 Pin 26    -> Move to B Button (with internal pullup to 3.3V)
 Pin 27    -> Return to Ping-pong Button (with internal pullup to 3.3V)
+EN        -> Reset Button (connects EN pin to GND for system reset)
 3.3V      -> 10kΩ Pull-up Resistors -> UGN3503UA OUT pins
 GND       -> All component ground connections
 ```
@@ -138,8 +139,11 @@ Pin 3 (OUT) -> 10kΩ -> 3.3V     Pin 3 (OUT) -> 10kΩ -> 3.3V
 
 ### Button Wiring
 ```
-All buttons: One side to ESP32 GPIO, other side to GND
+Manual Control Buttons: One side to ESP32 GPIO, other side to GND
 ESP32 internal pull-ups enabled in software (INPUT_PULLUP)
+
+Reset Button: One side to ESP32 EN pin, other side to GND
+Pressing resets the ESP32 immediately (hardware reset)
 ```
 
 ## Complete Bill of Materials (BOM)
@@ -152,7 +156,7 @@ ESP32 internal pull-ups enabled in software (INPUT_PULLUP)
 | NEMA 17 Stepper Motor | 1 | 1.8°, 1.5A, 4-wire | $15-25 | Motion control |
 | UGN3503UA Hall Sensors | 2 | TO-92 package | $2-4 each | Position sensing |
 | WS2812B LED Strip | 1 | 5 LEDs, 5V addressable | $5-8 | Status indication |
-| Push Buttons | 3 | 6mm tactile, momentary NO | $1-2 each | Manual control |
+| Push Buttons | 4 | 6mm tactile, momentary NO | $1-2 each | Manual control + reset |
 
 ### Power System
 | Component | Quantity | Specification | Est. Price | Purpose |
@@ -486,12 +490,13 @@ The current values were calibrated using laser measurement:
 - Test with lower MAX_SPEED
 
 ### Error Recovery
-Most errors require **power cycle** to reset:
+Most errors require **reset** to recover:
 1. **Motor will hold position** during error state (safe for inclines)
-2. Power off ESP32 completely
-3. Check and fix underlying issue
-4. Power on - system will restart from beginning
-5. **Note**: Motor maintains holding torque until power cycle for safety
+2. **Hardware Reset**: Press the reset button (connects EN to GND) for immediate restart
+3. **Power Cycle**: Alternatively, power off ESP32 completely then power on
+4. Check and fix underlying issue before restarting
+5. System will restart from beginning with full homing sequence
+6. **Note**: Motor maintains holding torque until reset for safety
 
 ## Customization
 
