@@ -53,12 +53,12 @@ MinimaSlidrAutomat is designed for simplicity and self-calibration. Upon power-u
 - **ESP32 development board** (DevKit V1 or similar)
 - **TMC2208 stepper motor driver** (basic step/dir mode)
 - **NEMA 17 stepper motor** (1.8° step angle recommended)
-- **2x UGN3503UA Hall effect sensors** (or equivalent: A3144, OH3144)
+- **2x Digital Hall effect sensors** (A3144, OH3144, or US1881 - digital switching types only)
 - **WS2812B LED strip** (5 LEDs)
 - **4x Push buttons** (momentary, normally open - 3 for manual control, 1 for reset)
 - **USB-C PD breakout board** (configurable to 12V output)
 - **LM2596 buck converter module** (12V to 5V, 3A capacity)
-- **2x 10kΩ resistors** (pull-up resistors for hall sensors)
+- **Wire and connectors** (for hall sensor connections)
 - **2x Neodymium magnets** (for sensor triggering)
 
 ### Mechanical Components (Retrofit Requirements)
@@ -117,24 +117,26 @@ ESP32 Pin -> Component
 Pin 2     -> TMC2208 STEP
 Pin 4     -> TMC2208 DIR  
 Pin 5     -> TMC2208 EN (Enable)
-Pin 21    -> UGN3503UA #1 OUT (Home A - LEFT END)
-Pin 22    -> UGN3503UA #2 OUT (Home B - RIGHT END)
+Pin 21    -> Digital Hall Sensor #1 OUT (Home A - LEFT END)
+Pin 22    -> Digital Hall Sensor #2 OUT (Home B - RIGHT END)
 Pin 23    -> WS2812B LED Data In
 Pin 25    -> Move to A Button (with internal pullup to 3.3V)
 Pin 26    -> Move to B Button (with internal pullup to 3.3V)
 Pin 27    -> Return to Ping-pong Button (with internal pullup to 3.3V)
 EN        -> Reset Button (connects EN pin to GND for system reset)
-3.3V      -> 10kΩ Pull-up Resistors -> UGN3503UA OUT pins
+Digital Hall Sensors have active push-pull outputs - no pull-up resistors needed
 GND       -> All component ground connections
 ```
 
 ### Hall Sensor Wiring Detail
 ```
-UGN3503UA #1 (Home A):          UGN3503UA #2 (Home B):
-Pin 1 (VCC) -> 5V               Pin 1 (VCC) -> 5V
-Pin 2 (GND) -> GND              Pin 2 (GND) -> GND  
-Pin 3 (OUT) -> 10kΩ -> 3.3V     Pin 3 (OUT) -> 10kΩ -> 3.3V
-             -> ESP32 GPIO21                  -> ESP32 GPIO22
+Digital Hall Sensor #1 (Home A):    Digital Hall Sensor #2 (Home B):
+Pin 1 (VCC) -> 5V                    Pin 1 (VCC) -> 5V
+Pin 2 (GND) -> GND                   Pin 2 (GND) -> GND  
+Pin 3 (OUT) -> ESP32 GPIO21 (direct) Pin 3 (OUT) -> ESP32 GPIO22 (direct)
+
+Note: Digital hall sensors (A3144/OH3144/US1881) have active push-pull outputs
+No pull-up resistors required - sensors actively drive HIGH/LOW states
 ```
 
 ### Button Wiring
@@ -154,7 +156,7 @@ Pressing resets the ESP32 immediately (hardware reset)
 | ESP32 DevKit V1 | 1 | 30-pin development board | $8-12 | Main controller |
 | TMC2208 Stepper Driver | 1 | V3.0 with heatsink | $8-15 | Motor driver |
 | NEMA 17 Stepper Motor | 1 | 1.8°, 1.5A, 4-wire | $15-25 | Motion control |
-| UGN3503UA Hall Sensors | 2 | TO-92 package | $2-4 each | Position sensing |
+| Digital Hall Sensors | 2 | A3144/OH3144/US1881, TO-92 | $1-3 each | Position sensing |
 | WS2812B LED Strip | 1 | 5 LEDs, 5V addressable | $5-8 | Status indication |
 | Push Buttons | 4 | 6mm tactile, momentary NO | $1-2 each | Manual control + reset |
 
@@ -163,7 +165,7 @@ Pressing resets the ESP32 immediately (hardware reset)
 |-----------|----------|--------------|------------|---------|
 | USB-C PD Breakout | 1 | 12V configurable output | $10-20 | Primary power |
 | LM2596 Buck Module | 1 | 12V→5V, 3A adjustable | $3-8 | 5V regulation |
-| 10kΩ Resistors | 2 | 1/4W, through-hole | $0.10 each | Hall sensor pull-ups |
+| Wire & Connectors | 1 set | 22-24 AWG, JST/Dupont | $5-10 | Hall sensor connections |
 | Neodymium Magnets | 2 | N35, 10-15mm diameter | $2-5 each | Sensor triggering |
 
 ### Connection Hardware
