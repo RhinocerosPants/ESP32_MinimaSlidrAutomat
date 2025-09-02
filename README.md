@@ -79,7 +79,7 @@ USB-C PD (12V) ──┬── TMC2208 VM (Motor Power)
                      ├── ESP32 VIN (→ Internal 3.3V regulator)
                      ├── WS2812B LED Strip (5V)
                      ├── TMC2208 VDD (Logic Power)
-                     └── UGN3503UA Sensors (5V)
+                     └── Digital Hall Sensors (5V)
 ```
 
 ### Power Budget
@@ -87,7 +87,7 @@ USB-C PD (12V) ──┬── TMC2208 VM (Motor Power)
 |-----------|--------------|-------------|--------|
 | ESP32 (active) | ~250mA | 5V→3.3V | 1.25W |
 | WS2812B LEDs (5x) | ~300mA | 5V | 1.5W |
-| UGN3503UA Sensors (2x) | ~20mA | 5V | 0.1W |
+| Digital Hall Sensors (2x) | ~20mA | 5V | 0.1W |
 | TMC2208 Logic | ~100mA | 5V | 0.5W |
 | TMC2208 + NEMA17 | ~1.5A | 12V | 18W |
 | **Total System** | **~2.17A** | **Mixed** | **21.35W** |
@@ -108,7 +108,7 @@ GND ───┴── Common Ground Bus (all components)
 LM2596 5V OUT ──┬── ESP32 VIN
                 ├── WS2812B 5V
                 ├── TMC2208 VDD  
-                └── UGN3503UA VCC (both sensors)
+                └── Digital Hall Sensor VCC (both sensors)
 ```
 
 ### Signal Connections
