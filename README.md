@@ -4,6 +4,31 @@
 
 Transform your manual camera slider into a self-calibrating, intelligent motion control system with automatic ping-pong motion and manual positioning capabilities.
 
+## Project Gallery
+
+<table>
+<tr>
+<td width="50%">
+<img src="url-to-complete-system" alt="Complete System">
+<p align="center"><b>Intelligent Camera Slider System</b></p>
+</td>
+<td width="50%">
+<img src="url-to-close-up" alt="Electronics">
+<p align="center"><b>ESP32 + TMC2208 Controller</b></p>
+</td>
+</tr>
+<tr>
+<td width="50%">
+<img src="url-to-operation" alt="In Action">
+<p align="center"><b>Smooth Cinematic Motion</b></p>
+</td>
+<td width="50%">
+<img src="url-to-leds" alt="LED Status">
+<p align="center"><b>Visual Status Indicators</b></p>
+</td>
+</tr>
+</table>
+
 ## Project Credits
 
 **Project by:** Aaron Young  
